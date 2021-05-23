@@ -1,0 +1,111 @@
+on:
+  push:
+    branches:
+      - main
+jobs:
+  build:
+    strategy:
+      matrix:
+        ffmpeg-ver: [
+          "4.4",
+          "4.3",
+          "4.2",
+          "4.1"
+        ]
+        gcc-ver: [
+          "11",
+          "10",
+          "9"
+        ]
+        arch: [
+          "x86-64",
+          "haswell",
+        ]
+    runs-on: ubuntu-latest
+    container: gcc:${{ matrix.gcc-ver }}
+    env:
+      CFLAGS: -O3 -march=${{ matrix.arch }}
+      CXXFLAGS: -O3 -march=${{ matrix.arch }}
+    steps:
+      - name: Install dependencies
+        run: |
+          apt update -qq
+          apt -y install \
+            autoconf \
+            automake \
+            build-essential \
+            cmake \
+            git-core \
+            libass-dev \
+            libfreetype6-dev \
+            libgnutls28-dev \
+            libsdl2-dev \
+            libsoxr-dev \
+            libtheora-dev \
+            libtool \
+            libva-dev \
+            libvdpau-dev \
+            libvorbis-dev \
+            libxcb1-dev \
+            libxcb-shm0-dev \
+            libxcb-xfixes0-dev \
+            meson \
+            nasm \
+            ninja-build \
+            pkg-config \
+            texinfo \
+            yasm \
+            zlib1g-dev
+      - name: Clone FFMPEG ${{ matrix.ffmpeg-ver }}
+        uses: actions/checkout@v2
+        with:
+          repository: FFmpeg/FFmpeg
+          ref: release/${{ matrix.ffmpeg-ver }}
+      - name: Clone FDK AAC
+        uses: actions/checkout@v2
+        with:
+          repository: mstorsjo/fdk-aac
+          path: ./fdk-aac
+      - name: Compile FDK AAC
+        run: |
+          cd fdk-aac
+          autoreconf -fiv
+          ./configure --prefix="${GITHUB_WORKSPACE}/ffmpeg_build" --disable-shared
+          make -j$(nproc)
+          make install
+          make distclean
+      - name: Get LAME
+        run: |
+          wget http://downloads.sourceforge.net/project/lame/lame/3.100/lame-3.100.tar.gz
+          tar xzvf lame-3.100.tar.gz
+          rm lame-3.100.tar.gz
+      - name: Compile LAME
+        run: |
+          cd lame-3.100
+          ./configure --prefix="${GITHUB_WORKSPACE}/ffmpeg_build" --enable-nasm --disable-shared
+          make -j$(nproc)
+          make install
+          make distclean
+      - name: Compile FFMPEG
+        run: |
+          ls -la
+          find .
+          export PKG_CONFIG_PATH="${GITHUB_WORKSPACE}/ffmpeg_build/lib/pkgconfig"
+          ./configure --prefix="${GITHUB_WORKSPACE}/ffmpeg_build" \
+            --extra-cflags="${CFLAGS} -I${GITHUB_WORKSPACE}/ffmpeg_build/include" \
+            --extra-ldflags="-L${GITHUB_WORKSPACE}/ffmpeg_build/lib" \
+            --bindir="${GITHUB_WORKSPACE}/bin" --extra-libs="-ldl" --enable-libfdk-aac \
+            --enable-libmp3lame --enable-libsoxr --disable-shared --enable-static \
+            --enable-libtheora --enable-libvorbis
+          make -j$(nproc)
+          make install
+      - name: Check binaries
+        run: find . | grep ffprobe
+      - name: Publish artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: ffmpeg${{ matrix.ffmpeg-ver }}-${{ matrix.arch }}-gcc${{ matrix.gcc-ver }}
+          path: |
+            ffmpeg
+            ffplay
+            ffprobe
