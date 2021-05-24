@@ -70,7 +70,8 @@ jobs:
         run: |
           cd fdk-aac
           autoreconf -fiv
-          ./configure --prefix="${GITHUB_WORKSPACE}/ffmpeg_build" --disable-shared
+          ./configure --prefix="${GITHUB_WORKSPACE}/ffmpeg_build" \
+            --disable-shared --enable-static
           make -j$(nproc)
           make install
           make distclean
@@ -82,7 +83,8 @@ jobs:
       - name: Compile LAME
         run: |
           cd lame-3.100
-          ./configure --prefix="${GITHUB_WORKSPACE}/ffmpeg_build" --enable-nasm --disable-shared
+          ./configure --prefix="${GITHUB_WORKSPACE}/ffmpeg_build" \
+            --enable-nasm --disable-shared --enable-static
           make -j$(nproc)
           make install
           make distclean
@@ -94,9 +96,48 @@ jobs:
           ./configure --prefix="${GITHUB_WORKSPACE}/ffmpeg_build" \
             --extra-cflags="${CFLAGS} -I${GITHUB_WORKSPACE}/ffmpeg_build/include" \
             --extra-ldflags="-L${GITHUB_WORKSPACE}/ffmpeg_build/lib" \
-            --bindir="${GITHUB_WORKSPACE}/bin" --extra-libs="-ldl" --enable-libfdk-aac \
-            --enable-libmp3lame --enable-libsoxr --disable-shared --enable-static \
-            --enable-libtheora --enable-libvorbis
+            --bindir="${GITHUB_WORKSPACE}/bin" --extra-libs="-ldl" \
+            --disable-shared \
+            --enable-static \
+            --disable-ffplay \
+            --disable-ffprobe \
+            --disable-doc \
+            --enable-libfdk-aac \
+            --enable-libmp3lame \
+            --enable-libsoxr \
+            --enable-libtheora \
+            --enable-libvorbis \
+            --disable-encoders \
+            --enable-encoder=aac \
+            --enable-encoder=aac_at \
+            --enable-encoder=aac_mf \
+            --enable-encoder=flac \
+            --enable-encoder=jpeg2000 \
+            --enable-encoder=libfdk_aac \
+            --enable-encoder=libmp3lame \
+            --enable-encoder=libopus \
+            --enable-encoder=libtheora \
+            --enable-encoder=libvorbis \
+            --enable-encoder=vorbis \
+            --enable-encoder=zlib \
+            --disable-decoders \
+            --enable-decoder=aac \
+            --enable-decoder=aac_at \
+            --enable-decoder=aac_fixed \
+            --enable-decoder=aac_latm \
+            --enable-decoder=flac \
+            --enable-decoder=jpeg2000 \
+            --enable-decoder=libfdk_aac \
+            --enable-decoder=libmp3lame \
+            --enable-decoder=libopus \
+            --enable-decoder=libtheora \
+            --enable-decoder=libvorbis \
+            --enable-decoder=pcm_s16le \
+            --enable-decoder=pcm_s16le_planar \
+            --enable-decoder=pcm_s24le \
+            --enable-decoder=pcm_s24le_planar \
+            --enable-decoder=vorbis \
+            --enable-decoder=zlib
           make -j$(nproc)
           make install
       - name: Check binaries
