@@ -41,9 +41,8 @@ jobs:
             libgnutls28-dev \
             libsdl2-dev \
             libsoxr-dev \
-            libtheora-dev \
             libtool \
-            libva-dev \
+            libtheora-dev \
             libvdpau-dev \
             libvorbis-dev \
             libxcb1-dev \
@@ -90,8 +89,6 @@ jobs:
           make distclean
       - name: Compile FFMPEG
         run: |
-          ls -la
-          find .
           export PKG_CONFIG_PATH="${GITHUB_WORKSPACE}/ffmpeg_build/lib/pkgconfig"
           ./configure --prefix="${GITHUB_WORKSPACE}/ffmpeg_build" \
             --extra-cflags="${CFLAGS} -I${GITHUB_WORKSPACE}/ffmpeg_build/include" \
@@ -108,36 +105,56 @@ jobs:
             --enable-libtheora \
             --enable-libvorbis \
             --disable-encoders \
-            --enable-encoder=aac \
-            --enable-encoder=aac_at \
-            --enable-encoder=aac_mf \
             --enable-encoder=flac \
             --enable-encoder=jpeg2000 \
             --enable-encoder=libfdk_aac \
             --enable-encoder=libmp3lame \
-            --enable-encoder=libopus \
             --enable-encoder=libtheora \
             --enable-encoder=libvorbis \
+            --enable-encoder=mjpeg \
+            --enable-encoder=pcm_s16le \
+            --enable-encoder=pcm_s16le_planar \
+            --enable-encoder=pcm_s24le \
+            --enable-encoder=pcm_s24le_planar \
+            --enable-encoder=png \
             --enable-encoder=vorbis \
+            --enable-encoder=wrapped_avframe \
             --enable-encoder=zlib \
             --disable-decoders \
-            --enable-decoder=aac \
-            --enable-decoder=aac_at \
-            --enable-decoder=aac_fixed \
-            --enable-decoder=aac_latm \
             --enable-decoder=flac \
             --enable-decoder=jpeg2000 \
             --enable-decoder=libfdk_aac \
-            --enable-decoder=libmp3lame \
-            --enable-decoder=libopus \
             --enable-decoder=libtheora \
             --enable-decoder=libvorbis \
+            --enable-decoder=mjpeg \
             --enable-decoder=pcm_s16le \
             --enable-decoder=pcm_s16le_planar \
             --enable-decoder=pcm_s24le \
             --enable-decoder=pcm_s24le_planar \
+            --enable-decoder=png \
+            --enable-decoder=theora \
             --enable-decoder=vorbis \
-            --enable-decoder=zlib
+            --enable-decoder=wrapped_avframe \
+            --enable-decoder=zlib \
+            --disable-parsers \
+            --enable-parser=aac \
+            --enable-parser=aac_latm \
+            --enable-parser=flac \
+            --enable-parser=mjpeg \
+            --enable-parser=mpegaudio \
+            --enable-parser=png \
+            --enable-parser=vorbis \
+            --disable-filters \
+            --enable-filter=acopy \
+            --enable-filter=anull \
+            --enable-filter=aresample \
+            --enable-filter=copy \
+            --enable-filter=null \
+            --enable-filter=scale \
+            --enable-filter=streamselect \
+            --disable-hwaccels \
+            --disable-indevs \
+            --disable-outdevs
           make -j$(nproc)
           make install
       - name: Check binaries
