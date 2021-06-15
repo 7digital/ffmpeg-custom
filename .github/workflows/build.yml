@@ -53,6 +53,8 @@ jobs:
             ninja-build \
             pkg-config \
             texinfo \
+            time \
+            unzip \
             yasm \
             zlib1g-dev
       - name: Clone FFMPEG ${{ matrix.ffmpeg-ver }}
@@ -162,8 +164,55 @@ jobs:
       - name: Publish artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: ffmpeg${{ matrix.ffmpeg-ver }}-${{ matrix.arch }}-gcc${{ matrix.gcc-ver }}
+          name: build-${{ matrix.ffmpeg-ver }}-${{ matrix.arch }}-gcc${{ matrix.gcc-ver }}
           path: |
             ffmpeg
             ffplay
             ffprobe
+      - name: Download test track
+        run: |
+          curl https://helpguide.sony.net/high-res/sample1/v1/data/Sample_BeeMoved_96kHz24bit.flac.zip --output sample.zip
+          unzip sample.zip
+          mv Sample_BeeMoved_96kHz24bit.flac sample.flac
+          chmod +x ffmpeg
+          mkdir media
+      - name: Run test and benchmark for AAC 320
+        run: |
+          benchmark=media/benchmark-ffmpeg${{ matrix.ffmpeg-ver }}-${{ matrix.arch }}-gcc${{ matrix.gcc-ver }}
+          echo -n "AAC320 " >> $benchmark
+          /usr/bin/time -f "%E" -a -o $benchmark ./ffmpeg -i sample.flac -c:a libfdk_aac -b:a 320k -c:v copy -movflags +faststart -f mp4 media/aac320.mp4
+      - name: Run test and benchmark for AAC 160
+        run: |
+          benchmark=media/benchmark-ffmpeg${{ matrix.ffmpeg-ver }}-${{ matrix.arch }}-gcc${{ matrix.gcc-ver }}
+          echo -n "AAC160 " >> $benchmark
+          /usr/bin/time -f "%E" -a -o $benchmark ./ffmpeg -i sample.flac -c:a libfdk_aac -vn -b:a 160k -movflags +faststart -map_metadata -1 -f mp4 media/aac160.mp4
+      - name: Run test and benchmark for AAC 64
+        run: |
+          benchmark=media/benchmark-ffmpeg${{ matrix.ffmpeg-ver }}-${{ matrix.arch }}-gcc${{ matrix.gcc-ver }}
+          echo -n "AAC 64 " >> $benchmark
+          /usr/bin/time -f "%E" -a -o $benchmark ./ffmpeg -i sample.flac -c:a libfdk_aac -profile:a aac_he -vn -b:a 64k -movflags +faststart -map_metadata -1 -f mp4 media/aac64.mp4
+      - name: Run test and benchmark for MP3 320
+        run: |
+          benchmark=media/benchmark-ffmpeg${{ matrix.ffmpeg-ver }}-${{ matrix.arch }}-gcc${{ matrix.gcc-ver }}
+          echo -n "MP3320 " >> $benchmark
+          /usr/bin/time -f "%E" -a -o $benchmark ./ffmpeg -i sample.flac -b:a 320k -c:v copy -id3v2_version 3 -f mp3 media/mp3320.mp3
+      - name: Run test and benchmark for MP3 download
+        run: |
+          benchmark=media/benchmark-ffmpeg${{ matrix.ffmpeg-ver }}-${{ matrix.arch }}-gcc${{ matrix.gcc-ver }}
+          echo -n "MP3dwn " >> $benchmark
+          /usr/bin/time -f "%E" -a -o $benchmark ./ffmpeg -i sample.flac -b:a 320k -vn -f mp3 media/mp3_download.mp3
+      - name: Run test and benchmark for MP3 streaming
+        run: |
+          benchmark=media/benchmark-ffmpeg${{ matrix.ffmpeg-ver }}-${{ matrix.arch }}-gcc${{ matrix.gcc-ver }}
+          echo -n "MP3str " >> $benchmark
+          /usr/bin/time -f "%E" -a -o $benchmark ./ffmpeg -i sample.flac -b:a 320k -vn -map_metadata -1 -f mp3 media/mp3_streaming.mp3
+      - name: Run test and benchmark for OGG 320
+        run: |
+          benchmark=media/benchmark-ffmpeg${{ matrix.ffmpeg-ver }}-${{ matrix.arch }}-gcc${{ matrix.gcc-ver }}
+          echo -n "OGG320 " >> $benchmark
+          /usr/bin/time -f "%E" -a -o $benchmark ./ffmpeg -i sample.flac -q:a 320k -map_metadata -1 -c:a libvorbis -f oga media/ogg320.ogg
+      - name: Publish benchmarks result
+        uses: actions/upload-artifact@v2
+        with:
+          name: benchmark-${{ matrix.ffmpeg-ver }}-${{ matrix.arch }}-gcc${{ matrix.gcc-ver }}
+          path: media/**
