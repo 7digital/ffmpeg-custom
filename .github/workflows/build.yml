@@ -99,7 +99,6 @@ jobs:
             --disable-shared \
             --enable-static \
             --disable-ffplay \
-            --disable-ffprobe \
             --disable-doc \
             --enable-libfdk-aac \
             --enable-libmp3lame \
