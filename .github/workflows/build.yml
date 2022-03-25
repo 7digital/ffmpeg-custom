@@ -102,6 +102,7 @@ jobs:
             --extra-libs='-static -L/usr/lib' \
             --extra-cflags='--static' \
             --enable-gpl \
+            --enable-nonfree \
             --enable-stripping \
             --disable-shared \
             --enable-static \
