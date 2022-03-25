@@ -98,6 +98,11 @@ jobs:
             --extra-cflags="${CFLAGS} -I${GITHUB_WORKSPACE}/ffmpeg_build/include" \
             --extra-ldflags="-L${GITHUB_WORKSPACE}/ffmpeg_build/lib" \
             --bindir="${GITHUB_WORKSPACE}/bin" --extra-libs="-ldl" \
+            \
+            --extra-libs='-static -L/usr/lib' \
+            --extra-cflags='--static' \
+            --enable-gpl \
+            --enable-stripping \
             --disable-shared \
             --enable-static \
             --disable-ffplay \
@@ -105,14 +110,14 @@ jobs:
             --enable-libfdk-aac \
             --enable-libmp3lame \
             --enable-libsoxr \
-            --enable-libtheora \
+            --disable-libtheora \
             --enable-libvorbis \
             --disable-encoders \
             --enable-encoder=flac \
             --enable-encoder=jpeg2000 \
             --enable-encoder=libfdk_aac \
             --enable-encoder=libmp3lame \
-            --enable-encoder=libtheora \
+            --disable-encoder=libtheora \
             --enable-encoder=libvorbis \
             --enable-encoder=mjpeg \
             --enable-encoder=pcm_s16le \
